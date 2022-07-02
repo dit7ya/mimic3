@@ -209,7 +209,7 @@ def initialize_args(state: CommandLineInterfaceState):
                     text = ""
                     continue
 
-                text += " " + line
+                text += f" {line}"
 
         state.texts = process_on_blank_line(state.texts)
 
@@ -293,49 +293,49 @@ def process_result(state: CommandLineInterfaceState):
                     if args.interactive or args.output_dir:
                         # Convert to WAV audio
                         wav_bytes: typing.Optional[bytes] = None
-                        if args.interactive:
-                            if args.stdout:
-                                # Write audio to stdout
-                                sys.stdout.buffer.write(result.audio_bytes)
-                                sys.stdout.buffer.flush()
-                            else:
-                                # Play sound
-                                if not wav_bytes:
-                                    wav_bytes = result.to_wav_bytes()
-
-                                if wav_bytes:
-                                    play_wav_bytes(state.args, wav_bytes)
-
-                        if args.output_dir:
-                            if not wav_bytes:
-                                wav_bytes = result.to_wav_bytes()
-
-                            # Determine file name
-                            if args.output_naming == OutputNaming.TEXT:
-                                # Use text itself
-                                file_name = line.strip().replace(" ", "_")
-                                file_name = file_name.translate(
-                                    str.maketrans(
-                                        "", "", string.punctuation.replace("_", "")
-                                    )
-                                )
-                            elif args.output_naming == OutputNaming.TIME:
-                                # Use timestamp
-                                file_name = str(time.time())
-                            elif args.output_naming == OutputNaming.ID:
-                                file_name = line_id
-
-                            assert file_name, f"No file name for text: {line}"
-                            wav_path = args.output_dir / (file_name + ".wav")
-                            wav_path.write_bytes(wav_bytes)
-
-                            _LOGGER.debug("Wrote %s", wav_path)
                     else:
                         # Combine all audio and output to stdout at the end
                         state.all_audio += result.audio_bytes
                         state.sample_rate_hz = result.sample_rate_hz
                         state.sample_width_bytes = result.sample_width_bytes
                         state.num_channels = result.num_channels
+                    if args.interactive:
+                        if args.stdout:
+                            # Write audio to stdout
+                            sys.stdout.buffer.write(result.audio_bytes)
+                            sys.stdout.buffer.flush()
+                        else:
+                            # Play sound
+                            if not wav_bytes:
+                                wav_bytes = result.to_wav_bytes()
+
+                            if wav_bytes:
+                                play_wav_bytes(state.args, wav_bytes)
+
+                    if args.output_dir:
+                        if not wav_bytes:
+                            wav_bytes = result.to_wav_bytes()
+
+                        # Determine file name
+                        if args.output_naming == OutputNaming.TEXT:
+                            # Use text itself
+                            file_name = line.strip().replace(" ", "_")
+                            file_name = file_name.translate(
+                                str.maketrans(
+                                    "", "", string.punctuation.replace("_", "")
+                                )
+                            )
+                        elif args.output_naming == OutputNaming.TIME:
+                            # Use timestamp
+                            file_name = str(time.time())
+                        elif args.output_naming == OutputNaming.ID:
+                            file_name = line_id
+
+                        assert file_name, f"No file name for text: {line}"
+                        wav_path = args.output_dir / f"{file_name}.wav"
+                        wav_path.write_bytes(wav_bytes)
+
+                        _LOGGER.debug("Wrote %s", wav_path)
                 elif isinstance(result, MarkResult):
                     if state.mark_writer:
                         print(result.name, file=state.mark_writer)
@@ -584,9 +584,7 @@ def get_remote_wav_bytes(
     url = f"{args.remote}/api/tts"
     _LOGGER.debug("Synthesizing text remotely at %s", url)
 
-    wav_bytes = requests.post(url, headers=headers, params=params, data=text).content
-
-    return wav_bytes
+    return requests.post(url, headers=headers, params=params, data=text).content
 
 
 # -----------------------------------------------------------------------------

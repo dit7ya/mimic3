@@ -135,10 +135,7 @@ def get_app(args: argparse.Namespace, request_queue: Queue, temp_dir: str):
         """Encode a voice to JSON"""
 
         def default(self, o):
-            if isinstance(o, set):
-                return list(o)
-
-            return json.JSONEncoder.default(self, o)
+            return list(o) if isinstance(o, set) else json.JSONEncoder.default(self, o)
 
     app.json_encoder = VoiceEncoder  # type: ignore
 
@@ -178,33 +175,24 @@ def get_app(args: argparse.Namespace, request_queue: Queue, temp_dir: str):
         voice = request.args.get("voice") or args.voice or DEFAULT_VOICE
         tts_args["voice"] = str(voice)
 
-        # TTS settings
-        noise_scale = request.args.get("noiseScale")
-        if noise_scale:
+        if noise_scale := request.args.get("noiseScale"):
             tts_args["noise_scale"] = float(noise_scale)
 
-        noise_w = request.args.get("noiseW")
-        if noise_w:
+        if noise_w := request.args.get("noiseW"):
             tts_args["noise_w"] = float(noise_w)
 
-        length_scale = request.args.get("lengthScale")
-        if length_scale:
+        if length_scale := request.args.get("lengthScale"):
             tts_args["length_scale"] = float(length_scale)
 
-        # Set SSML flag either from arg or content type
-        ssml_str = request.args.get("ssml")
-        if ssml_str:
+        if ssml_str := request.args.get("ssml"):
             tts_args["ssml"] = _to_bool(ssml_str)
         elif request.content_type == "application/ssml+xml":
             tts_args["ssml"] = True
 
-        text_language = request.args.get("textLanguage")
-        if text_language:
+        if text_language := request.args.get("textLanguage"):
             tts_args["text_language"] = str(text_language)
 
-        # Id used for cache
-        cache_id = request.args.get("cacheId")
-        if cache_id:
+        if cache_id := request.args.get("cacheId"):
             tts_args["cache_id"] = str(cache_id)
 
         # Text can come from POST body or GET ?text arg
@@ -319,10 +307,11 @@ def get_app(args: argparse.Namespace, request_queue: Queue, temp_dir: str):
         for voice in sorted_voices:
             if voice.is_multispeaker:
                 # List each speaker separately
-                for speaker in voice.speakers:
-                    lines.append(
-                        f"{voice.key}#{speaker} {voice.language} {gender} {tech}"
-                    )
+                lines.extend(
+                    f"{voice.key}#{speaker} {voice.language} {gender} {tech}"
+                    for speaker in voice.speakers
+                )
+
             else:
                 lines.append(f"{voice.key} {voice.language} {gender} {tech}")
 

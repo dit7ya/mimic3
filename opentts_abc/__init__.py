@@ -313,6 +313,4 @@ class TextToSpeechSystem(AbstractContextManager, metaclass=ABCMeta):
 
                     raise e
 
-            wav_bytes = wav_io.getvalue()
-
-            return wav_bytes
+            return wav_io.getvalue()

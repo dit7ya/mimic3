@@ -44,20 +44,19 @@ with open(version_path, "r", encoding="utf-8") as version_file:
 # -----------------------------------------------------------------------------
 
 # dependency => [tags]
-extras = {}
-
-# Create language-specific extras
-for lang in [
-    "de",
-    "es",
-    "fa",
-    "fr",
-    "it",
-    "nl",
-    "ru",
-    "sw",
-]:
-    extras[f"gruut[{lang}]"] = [lang]
+extras = {
+    f"gruut[{lang}]": [lang]
+    for lang in [
+        "de",
+        "es",
+        "fa",
+        "fr",
+        "it",
+        "nl",
+        "ru",
+        "sw",
+    ]
+}
 
 
 # Add "all" tag

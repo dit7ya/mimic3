@@ -208,7 +208,6 @@ class Mimic3Voice(metaclass=ABCMeta):
                                 "Unable to find a speaker with the name '%s'. Falling back to first speaker.",
                                 speaker,
                             )
-                            pass
                     else:
                         speaker_id = maybe_speaker_id
             elif speaker is not None:
@@ -400,11 +399,9 @@ class Mimic3Voice(metaclass=ABCMeta):
 
         session_options.use_deterministic_compute = use_deterministic_compute
 
-        onnx_model = onnxruntime.InferenceSession(
+        return onnxruntime.InferenceSession(
             str(generator_path), sess_options=session_options, providers=providers
         )
-
-        return onnx_model
 
 
 # -----------------------------------------------------------------------------
@@ -418,8 +415,7 @@ class GruutVoice(Mimic3Voice):
     ) -> TEXT_TO_PHONEMES_TYPE:
         text_language = text_language or self.config.text_language or DEFAULT_LANGUAGE
         for sentence in gruut.sentences(text, lang=text_language):
-            sent_phonemes = [w.phonemes for w in sentence if w.phonemes]
-            if sent_phonemes:
+            if sent_phonemes := [w.phonemes for w in sentence if w.phonemes]:
                 yield sent_phonemes, BreakType.UTTERANCE
 
     def word_to_phonemes(
@@ -555,9 +551,7 @@ class EspeakVoice(Mimic3Voice):
             ssml=True,
         )
 
-        word_phonemes = list(IPA.graphemes(phoneme_str))
-
-        return word_phonemes
+        return list(IPA.graphemes(phoneme_str))
 
     def say_as_to_phonemes(
         self,
@@ -586,11 +580,10 @@ class EspeakVoice(Mimic3Voice):
             ssml=True,
         )
 
-        word_phonemes = [
-            list(IPA.graphemes(wp_str)) for wp_str in phoneme_str.split(word_separator)
+        return [
+            list(IPA.graphemes(wp_str))
+            for wp_str in phoneme_str.split(word_separator)
         ]
-
-        return word_phonemes
 
     def _language_to_voice(self, language: str) -> str:
         """Make voice name from language name"""
@@ -666,9 +659,7 @@ class HazmEspeakVoice(EspeakVoice):
         text_language: typing.Optional[str] = None,
     ) -> WORD_PHONEMES_TYPE:
         sentences = self._preprocess_text(text)
-        text = " ".join(
-            " ".join(word_text for word_text in words) for words in sentences
-        )
+        text = " ".join(" ".join(words) for words in sentences)
 
         return super().say_as_to_phonemes(
             text, interpret_as, say_format=say_format, text_language=text_language
@@ -690,11 +681,10 @@ class HazmEspeakVoice(EspeakVoice):
         fixed_words = []
 
         for word, pos in self._tagger.tag(words):
-            if pos[-1] == "e":
-                if word[-1] != "ِ":
-                    if (word[-1] == "ه") and (word[-2] != "ا"):
-                        word += "‌ی"
-                    word += "ِ"
+            if pos[-1] == "e" and word[-1] != "ِ":
+                if (word[-1] == "ه") and (word[-2] != "ا"):
+                    word += "‌ی"
+                word += "ِ"
 
             fixed_words.append(word)
 

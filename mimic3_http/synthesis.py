@@ -80,9 +80,7 @@ def do_synthesis(item: SynthesisRequest, mimic3: Mimic3TextToSpeechSystem) -> by
 
                 raise e
 
-        wav_bytes = wav_io.getvalue()
-
-        return wav_bytes
+        return wav_io.getvalue()
 
 
 def do_synthesis_proc(args: argparse.Namespace, request_queue: Queue):

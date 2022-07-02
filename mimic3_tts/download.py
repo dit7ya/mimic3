@@ -78,10 +78,7 @@ def download_voice(
     """Downloads a voice to a directory"""
     from tqdm.auto import tqdm
 
-    if url_base.endswith("/"):
-        # Remove final slash
-        url_base = url_base[:-1]
-
+    url_base = url_base.removesuffix("/")
     voice_dir = Path(voices_dir) / voice_key
     voice_dir.mkdir(parents=True, exist_ok=True)
 
@@ -120,19 +117,16 @@ def download_voice(
             with urllib.request.urlopen(file_url) as response:
                 with open(file_path, mode="wb") as dest_file:
                     with tqdm(
-                        unit="B",
-                        unit_scale=True,
-                        unit_divisor=1024,
-                        miniters=1,
-                        desc=voice_file.relative_path,
-                        total=int(response.headers.get("content-length", 0)),
-                    ) as pbar:
-                        chunk = response.read(chunk_bytes)
-                        while chunk:
+                                            unit="B",
+                                            unit_scale=True,
+                                            unit_divisor=1024,
+                                            miniters=1,
+                                            desc=voice_file.relative_path,
+                                            total=int(response.headers.get("content-length", 0)),
+                                        ) as pbar:
+                        while chunk := response.read(chunk_bytes):
                             dest_file.write(chunk)
                             pbar.update(len(chunk))
-                            chunk = response.read(chunk_bytes)
-
             _LOGGER.debug("Downloaded %s", file_path)
         except HTTPError as e:
             _LOGGER.exception("download_voice")
@@ -201,10 +195,11 @@ def main(argv=None):
     for key_or_pattern in args.key:
         if isinstance(key_or_pattern, re.Pattern):
             # Wildcards
-            voice_keys = []
-            for maybe_key in _VOICES.keys():
-                if key_or_pattern.match(maybe_key):
-                    voice_keys.append(maybe_key)
+            voice_keys = [
+                maybe_key
+                for maybe_key in _VOICES.keys()
+                if key_or_pattern.match(maybe_key)
+            ]
 
             _LOGGER.debug("%s matched %s", key_or_pattern, voice_keys)
         else:
