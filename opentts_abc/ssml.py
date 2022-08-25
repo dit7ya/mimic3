@@ -496,10 +496,7 @@ class SSMLSpeaker:
     @property
     def _state(self) -> ParsingState:
         """Get state at the top of the stack"""
-        if self._state_stack:
-            return self._state_stack[-1]
-
-        return ParsingState.DEFAULT
+        return self._state_stack[-1] if self._state_stack else ParsingState.DEFAULT
 
     def _push_state(self, new_state: ParsingState):
         """Push new state on to the stack"""
@@ -507,18 +504,12 @@ class SSMLSpeaker:
 
     def _pop_state(self) -> ParsingState:
         """Pop state off the stack"""
-        if self._state_stack:
-            return self._state_stack.pop()
-
-        return ParsingState.DEFAULT
+        return self._state_stack.pop() if self._state_stack else ParsingState.DEFAULT
 
     @property
     def _element(self) -> typing.Optional[etree.Element]:
         """Get XML element at the top of the stack"""
-        if self._element_stack:
-            return self._element_stack[-1]
-
-        return None
+        return self._element_stack[-1] if self._element_stack else None
 
     def _push_element(self, new_element: etree.Element):
         """Push new XML element on to the stack"""
@@ -526,18 +517,12 @@ class SSMLSpeaker:
 
     def _pop_element(self) -> typing.Optional[etree.Element]:
         """Pop XML element off the stack"""
-        if self._element_stack:
-            return self._element_stack.pop()
-
-        return None
+        return self._element_stack.pop() if self._element_stack else None
 
     @property
     def _lang(self) -> typing.Optional[str]:
         """Get language at the top of the stack"""
-        if self._lang_stack:
-            return self._lang_stack[-1]
-
-        return self._default_lang
+        return self._lang_stack[-1] if self._lang_stack else self._default_lang
 
     def _push_lang(self, new_lang: str):
         """Push new language on to the stack"""
@@ -545,18 +530,12 @@ class SSMLSpeaker:
 
     def _pop_lang(self) -> typing.Optional[str]:
         """Pop language off the stop of the stack"""
-        if self._lang_stack:
-            return self._lang_stack.pop()
-
-        return self._default_lang
+        return self._lang_stack.pop() if self._lang_stack else self._default_lang
 
     @property
     def _voice(self) -> typing.Optional[str]:
         """Get voice at the top of the stack"""
-        if self._voice_stack:
-            return self._voice_stack[-1]
-
-        return self._default_voice
+        return self._voice_stack[-1] if self._voice_stack else self._default_voice
 
     def _push_voice(self, new_voice: str):
         """Push new voice on to the stack"""
@@ -564,10 +543,7 @@ class SSMLSpeaker:
 
     def _pop_voice(self) -> typing.Optional[str]:
         """Pop voice off the top of the stack"""
-        if self._voice_stack:
-            return self._voice_stack.pop()
-
-        return self._default_voice
+        return self._voice_stack.pop() if self._voice_stack else self._default_voice
 
     @property
     def _prosody(self) -> ProsodyState:
@@ -652,13 +628,7 @@ class SSMLSpeaker:
 
             rate_value = float(rate_str)
 
-            if is_percent:
-                # 50% = 0.5
-                rate = rate_value / 100.0
-            else:
-                # Absolute value
-                rate = rate_value
-
+            rate = rate_value / 100.0 if is_percent else rate_value
         return rate
 
 
@@ -684,13 +654,7 @@ def attrib_no_namespace(
 
 def text_and_elements(element, is_last=False):
     """Yields element, text, sub-elements, end element, and tail"""
-    element_metadata = None
-
-    if is_last:
-        # True if this is the last child element of a parent.
-        # Used to preserve whitespace.
-        element_metadata = {"is_last": True}
-
+    element_metadata = {"is_last": True} if is_last else None
     yield element, element_metadata
 
     # Text before any tags (or end tag)

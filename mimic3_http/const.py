@@ -34,10 +34,7 @@ class TextToWavParams:
 
     @property
     def cache_key(self) -> str:
-        if self.cache_id:
-            return self.cache_id
-
-        return hashlib.md5(repr(self).encode()).hexdigest()
+        return self.cache_id or hashlib.md5(repr(self).encode()).hexdigest()
 
 
 @dataclass

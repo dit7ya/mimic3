@@ -227,11 +227,10 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
                     if speakers_path.is_file():
                         speakers = []
                         with open(
-                            speakers_path, "r", encoding="utf-8"
-                        ) as speakers_file:
+                                                speakers_path, "r", encoding="utf-8"
+                                            ) as speakers_file:
                             for line in speakers_file:
-                                line = line.strip()
-                                if line:
+                                if line := line.strip():
                                     speakers.append(line)
 
                     # Load aliases
@@ -242,8 +241,7 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
 
                         with open(aliases_path, "r", encoding="utf-8") as aliases_file:
                             for line in aliases_file:
-                                line = line.strip()
-                                if line:
+                                if line := line.strip():
                                     aliases.add(line)
 
                     voice_key = f"{voice_lang}/{voice_name}"
@@ -294,9 +292,11 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
             key_or_pattern = wildcard_to_regex(voice_key, wildcard=WILDCARD)
             if isinstance(key_or_pattern, re.Pattern):
                 # Wildcards
-                for maybe_key in _VOICES.keys():
-                    if key_or_pattern.match(maybe_key):
-                        voice_keys.append(maybe_key)
+                voice_keys.extend(
+                    maybe_key
+                    for maybe_key in _VOICES.keys()
+                    if key_or_pattern.match(maybe_key)
+                )
 
                 _LOGGER.debug("%s matched %s", key_or_pattern, voice_keys)
             else:
@@ -474,12 +474,14 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
 
         for result in self._results:
             if isinstance(result, Mimic3Phonemes):
-                if result.is_utterance or (result.current_settings != last_settings):
-                    if sent_phonemes:
-                        yield self._speak_sentence_phonemes(
-                            sent_phonemes, settings=last_settings
-                        )
-                        sent_phonemes.clear()
+                if (
+                    result.is_utterance
+                    or (result.current_settings != last_settings)
+                ) and sent_phonemes:
+                    yield self._speak_sentence_phonemes(
+                        sent_phonemes, settings=last_settings
+                    )
+                    sent_phonemes.clear()
 
                 sent_phonemes.extend(result.phonemes)
                 last_settings = result.current_settings
@@ -571,11 +573,7 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
 
             return existing_voice
 
-        # https://onnxruntime.ai/docs/execution-providers/
-        providers = None
-        if self.settings.use_cuda:
-            providers = ["CUDAExecutionProvider"]
-
+        providers = ["CUDAExecutionProvider"] if self.settings.use_cuda else None
         voice = Mimic3Voice.load_from_directory(
             model_dir,
             providers=providers,
@@ -610,6 +608,4 @@ class Mimic3TextToSpeechSystem(TextToSpeechSystem):
             voices_dir=self.settings.voices_download_dir,
         )
 
-        voice_dir = Path(self.settings.voices_download_dir) / voice_key
-
-        return voice_dir
+        return Path(self.settings.voices_download_dir) / voice_key

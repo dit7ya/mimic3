@@ -127,8 +127,6 @@ def synthesize(
     voice_dir = output_dir / key
     voice_dir.mkdir(parents=True, exist_ok=True)
 
-    results = []
-
     # First speaker only
     voice_key = key
     sample_path = voice_dir / "sample.wav"
@@ -141,9 +139,7 @@ def synthesize(
     wav_hash = hashlib.sha256(sample_path.read_bytes()).hexdigest()
     _LOGGER.info(sample_path)
 
-    results.append(f"{voice_key} {wav_hash}")
-
-    return results
+    return [f"{voice_key} {wav_hash}"]
 
 
 # -----------------------------------------------------------------------------
